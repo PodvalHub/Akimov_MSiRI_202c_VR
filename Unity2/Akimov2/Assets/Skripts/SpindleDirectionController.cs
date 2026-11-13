@@ -7,6 +7,9 @@ public class SpindleDirectionController : MonoBehaviour
     [Header("Рычаг направления")]
     public CircularDrive directionLever;
 
+    [Header("Панель станка")]
+    public MachinePanel1 machinePanel;
+
     [Header("Вращающийся узел шпинделя")]
     public Transform spindleAssembly;
 
@@ -25,23 +28,19 @@ public class SpindleDirectionController : MonoBehaviour
     {
         if (directionLever == null || spindleAssembly == null)
         {
-            Debug.LogError(
-                "Не назначен рычаг или вращающийся узел шпинделя!",
-                this
-            );
-
+            Debug.LogError("Не назначен рычаг или шпиндель!");
             enabled = false;
             return;
         }
 
-        // Запоминаем начальное положение рычага как нейтральное.
         neutralAngle = directionLever.outAngle;
-
-        Debug.Log("Контроллер шпинделя готов. Нейтральное положение установлено.");
     }
 
     private void Update()
     {
+        if (directionLever == null || spindleAssembly == null)
+            return;
+
         float angleDifference = Mathf.DeltaAngle(
             neutralAngle,
             directionLever.outAngle
@@ -57,7 +56,10 @@ public class SpindleDirectionController : MonoBehaviour
         else if (angleDifference < -neutralDeadZone)
             direction = -1;
 
-        // Вращаем шпиндель.
+        // При остановленном станке шпиндель не вращается.
+        if (machinePanel == null || !machinePanel.IsRunning)
+            direction = 0;
+
         if (direction != 0)
         {
             float degreesPerSecond = spindleRPM * 6f;
@@ -78,7 +80,7 @@ public class SpindleDirectionController : MonoBehaviour
             else if (direction == -1)
                 Debug.Log("Шпиндель: вращение назад");
             else
-                Debug.Log("Шпиндель: нейтраль");
+                Debug.Log("Шпиндель: остановлен");
         }
     }
 }
